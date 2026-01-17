@@ -1,4 +1,5 @@
-<div align="center"> <img width="500" height="300" alt="image" src="https://github.com/user-attachments/assets/5103cd8c-2a2f-45c0-983c-933819dcd6dd" /></div>
+ <img width="500" height="300" alt="image" src="https://github.com/user-attachments/assets/5103cd8c-2a2f-45c0-983c-933819dcd6dd"/>
+
 <p align="center">
     
 # **Smopsys: The Metriplectic Kernel** <img width="30" height="30" alt="image" src="https://github.com/user-attachments/assets/38bfd29d-b3f9-4cd7-be6d-4fe5a121b5e0" /> 
