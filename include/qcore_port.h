@@ -54,6 +54,7 @@ typedef union {
 #define QPORT ((quantum_port_t *)QPORT_BASE_ADDR)
 
 // --- Public API Prototypes ---
+extern int g_simulation_mode;
 void qport_handshake(void);
 void bridge_tick_sync(majorana_byte_t *cycle);
 

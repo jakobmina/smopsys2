@@ -1,4 +1,9 @@
 #include "../include/qcore_port.h"
+#include "../include/qcore_uart.h"
+#include "../include/qcore_viz.h"
+
+// Global flag for hardware presence
+int g_simulation_mode = 0;
 
 // Define the mock buffer if in test env
 #ifdef QCORE_TEST_ENV
@@ -23,11 +28,11 @@ static uint32_t system_phase_zero = 0;
 void qport_handshake(void) {
     // 1. Ping Physical: Verify Signature
     if (QPORT->MAGIC_SIG != QPORT_MAGIC_SIG) {
-        // FATAL: Hardware not present or bus error.
-        // Rule: HALT SYSTEM. Fail Safe.
-        while(1) {
-            cpu_relax();
-        }
+        // HARDWARE NOT DETECTED: Switch to Simulation Mode
+        g_simulation_mode = 1;
+        uart_puts(ANSI_COLOR_YELLOW "\n[ WARNING: QUANTUM HARDWARE NOT DETECTED ]\n" ANSI_COLOR_RESET);
+        uart_puts(ANSI_COLOR_CYAN "[ SWITCHING TO SIMULATION MODE ]\n\n" ANSI_COLOR_RESET);
+        return;
     }
 
     // 2. Thermal Purge: Send Calibrate Command
@@ -47,6 +52,16 @@ void qport_handshake(void) {
 // --- Phase 3: Execution Synchronization ---
 // The CPU is slave to the QPU collapse event.
 void bridge_tick_sync(majorana_byte_t *cycle) {
+    if (g_simulation_mode) {
+        // En modo simulación, generamos un colapso pseudo-aleatorio
+        // y simulamos un pequeño delay de procesamiento.
+        for (volatile int i = 0; i < 10000; i++);
+        
+        uint8_t mock_state = (uint8_t)((pseudo_random() % 2) << 7);
+        cycle->raw = (uint8_t)((cycle->raw & 0x7F) | mock_state);
+        return;
+    }
+
     // 1. Preparation (Pre-Pulse)
     // Write only the Phase Trajectory bits to the latch (Bits 0-6)
     // We mask bit 7 just in case logic was dirty, though structure handles it.
