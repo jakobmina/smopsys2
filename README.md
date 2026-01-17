@@ -9,7 +9,17 @@
 
 **Smopsys** is a bare-metal experimental kernel designed to implement the **Metriplectic Mandate**: a physics-based operating system architecture that rigorously balances conservative (Hamiltonian/Quantum) and dissipative (Entropic/Dissipative) dynamics.
 
-## **New: Majorana Architecture**
+## **Deployment & Execution**
+
+To run the Smopsys2 kernel in simulation mode (QEMU):
+
+```bash
+qemu-system-riscv64 -machine virt -nographic -bios none -kernel smopsys.elf
+```
+
+*To exit QEMU: Press `Ctrl+A` then `X`.*
+
+## **Core Features**
 
 The system logic is no longer driven by a clock, but by **Quantum Collapse** events.
 

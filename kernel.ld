@@ -12,7 +12,7 @@ MEMORY
    * Base estándar RISC-V (QEMU Virt / Hardware físico): 0x80000000 
    * Tamaño: 128MB (Suficiente para lógica metripléctica)
    */
-  RAM  (rwx) : ORIGIN = 0x80200000, LENGTH = 128M
+  RAM  (rwx) : ORIGIN = 0x80000000, LENGTH = 128M
 
   /* * MMQI_REGION: La Zona Prohibida / Puerto Cuántico.
    * Reservamos esto explícitamente para que el linker lance un ERROR

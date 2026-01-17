@@ -54,6 +54,11 @@ float execute_bayesian_step(void) {
 // ============================================================================
 void kernel_main(void) {
     
+    // 0. Inicializar UART para diagnóstico temprano
+    uart_init();
+    uart_puts(ANSI_CLEAR_SCREEN ANSI_CURSOR_HOME);
+    uart_puts(ANSI_COLOR_CYAN "SMOPSYS2: INITIATING ENERGY RECOVERY...\n" ANSI_COLOR_RESET);
+
     // 1. Configuración de Arquitectura Clásica
     setup_hardware_arch();
 
@@ -89,10 +94,6 @@ void kernel_main(void) {
     uint32_t phase_val_raw = 0;
     uint32_t collapse_val_raw = 0;
     
-    uart_init();
-    uart_puts(ANSI_CLEAR_SCREEN ANSI_CURSOR_HOME);
-    uart_puts(ANSI_COLOR_CYAN "SMOPSYS2: INITIATING ENERGY RECOVERY...\n" ANSI_COLOR_RESET);
-
     float current_entropy = 1.0f;
 
     // Bucle de estabilización visual (Matrix effect)

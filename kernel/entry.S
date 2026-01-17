@@ -5,18 +5,20 @@
 .global _start
 
 _start:
-    # 1. Deshabilitar interrupciones (Modo silencio total al arrancar)
+    # 1. Configurar el vector de excepciones (mtvec)
+    la t0, trap_vector
+    csrw mtvec, t0
+
+    # 2. Deshabilitar interrupciones
     csrw mie, zero
 
-    # 2. Configurar el Stack Pointer (sp)
-    # _stack_top viene definido desde el linker.ld
+    # 3. Configurar el Stack Pointer (sp)
     la sp, _stack_top
 
-    # 3. Limpiar el BSS (Variables estáticas a 0)
-    # Esto es vital para que las variables de estado (flags) inicien limpias.
+    # 4. Limpiar el BSS
     la t0, _bss_start
     la t1, _bss_end
-    bge t0, t1, enter_kernel # Si tamaño es 0, saltar
+    bge t0, t1, enter_kernel
 
 zero_loop:
     sw zero, 0(t0)
@@ -24,10 +26,16 @@ zero_loop:
     blt t0, t1, zero_loop
 
 enter_kernel:
-    # 4. Salto al Núcleo Metripléctico
-    # Saltamos a main(). Si main retorna (no debería), colgamos el sistema.
     call kernel_main
 
 hang:
-    wfi        # Wait for Interrupt (Ahorro de energía)
-    j hang     # Bucle infinito de seguridad
+    wfi
+    j hang
+
+# --- Vector de Excepciones Básico ---
+.align 4
+trap_vector:
+    # Si ocurre un trap (como Load Access Fault al tocar hardware inexistente)
+    # saltamos aquí. En un sistema real recuperaríamos el estado.
+    # Aquí simplemente nos quedamos parados para evitar corrupción.
+    j trap_vector
