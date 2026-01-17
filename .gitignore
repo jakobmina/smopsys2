@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.pytest_cache/
+*.egg-info/
+
+# C/C++
+*.o
+*.a
+*.elf
+*.out
+main.o
+smopsys.elf
+libqcore.so
+
+# Build artifacts
+Module.symvers
+modules.order
+.*.cmd
+.tmp_versions/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Docker
+.dockerignore
