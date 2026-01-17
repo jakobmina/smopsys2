@@ -26,12 +26,14 @@ RUN apt-get update && apt-get install -y \
 # Instalar pytest para tests
 RUN pip3 install pytest
 
-# (Opcional) Instalar toolchain RISC-V
-# Descomenta las siguientes líneas si quieres compilar el kernel RISC-V
-# RUN apt-get update && apt-get install -y \
-#     gcc-riscv64-unknown-elf \
-#     binutils-riscv64-unknown-elf \
-#     && rm -rf /var/lib/apt/lists/*
+# Instalar toolchain RISC-V y QEMU
+RUN apt-get update && apt-get install -y \
+    gcc-riscv64-unknown-elf \
+    binutils-riscv64-unknown-elf \
+    qemu-system-riscv64 \
+    qemu-system-misc \
+    make \
+    && rm -rf /var/lib/apt/lists/*
 
 # Crear directorio de trabajo
 WORKDIR /smopsys2
@@ -41,6 +43,24 @@ COPY . /smopsys2/
 
 # Compilar la biblioteca de tests
 RUN make clean && make test_lib
+
+# Update the build command
+RUN riscv64-unknown-elf-gcc -T kernel.ld -o smopsys.elf \
+    kernel/entry.S \
+    kernel/main.c \
+    kernel/qcore_uart.c \
+    kernel/qcore_lindblad.c \
+    kernel/qcore_bayes.c \
+    kernel/qcore_math.c \
+    kernel/qcore_bridge.c \
+    kernel/qcore_scheduler.c \
+    kernel/qcore_security.c \
+    kernel/qcore_wetware.c \
+    kernel/qcore_asm.c \
+    kernel/qcore_pim.c \
+    kernel/qcore_pim_asm.S \
+    kernel/qcore_viz.c \
+    -ffreestanding -nostdlib -Iinclude -mcmodel=medany
 
 # Ejecutar tests automáticamente al construir
 RUN python3 -m pytest tests/ -v || true

@@ -24,6 +24,7 @@ C_SRCS = kernel/qcore_math.c \
          kernel/qcore_bridge.c \
          kernel/qcore_security.c \
          kernel/qcore_lindblad.c \
+         kernel/qcore_uart.c \
          kernel/main.c
 
 # Kernel Entry (Assembly)

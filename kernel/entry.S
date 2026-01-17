@@ -1,7 +1,7 @@
 # Smopsys2 Entry Point
 # Configura el entorno bare-metal antes de saltar a C.
 
-.section .text.init
+.section .text.boot
 .global _start
 
 _start:

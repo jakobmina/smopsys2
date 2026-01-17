@@ -1,15 +1,10 @@
-
+#include "../include/qcore_asm.h"
 #include "../include/qcore_arch.h"
 
-// Función para empaquetar información cuántica manipulando la fase del electrón
-// Note: This uses standard GCC inline assembly syntax for RISC-V.
-#if 0
-void pack_quantum_state(uint32_t data) {
-    // ...
-}
-
-uint32_t read_quantum_register(void) {
-    return 0;
-}
+void disable_interrupts(void) {
+#ifdef ARCH_RISCV
+    // Disable all interrupts in M-mode by clearing MIE bit in mstatus
+    __asm__ volatile ("csrci mstatus, 8");
 #endif
+}
 

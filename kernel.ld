@@ -23,15 +23,28 @@ MEMORY
 
 SECTIONS
 {
-  /* El código comienza al inicio de la RAM */
-  . = 0x80000000;
+    /* QEMU virt machine RAM starts at 0x80000000 */
+    . = 0x80000000;
+    
+    .text : {
+         PROVIDE(_text_start = .);
+         KEEP(*(.text.boot))
+         *(.text.init)
+         *(.text)
+         *(.text.*)
+         PROVIDE(_text_end = .);
+    } > RAM
 
-  /* 1. Código Ejecutable (.text) */
-  .text : {
-    PROVIDE(_text_start = .);
-    *(.text.init) *(.text .text.*) /* Código de inicio primero */
-    PROVIDE(_text_end = .);
-  } > RAM
+    /* SECCIÓN CRÍTICA: La Red Neuronal Bayesiana */
+    /* Alineada a 4KB para protección de página en RISC-V */
+    . = ALIGN(4096);
+    .smop_laminar_mem : 
+    {
+        _laminar_mem_start = .;
+        *(.smop_laminar_mem)
+        . = . + 0x100000; /* Reservamos 1MB para la matriz de pesos */
+        _laminar_mem_end = .;
+    } > RAM
 
   /* 2. Datos de Solo Lectura (.rodata) */
   .rodata : {

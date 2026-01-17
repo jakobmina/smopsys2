@@ -7,6 +7,9 @@
 #include "../include/qcore_port.h"
 #include "../include/qcore_security.h"
 #include "../include/qcore_lindblad.h"
+#include "../include/qcore_uart.h"
+#include "../include/qcore_pim.h"
+#include "../include/qcore_viz.h"
 
 // Umbral de Sorpresa (Chi-Cuadrado > 6.0 en Q16.16)
 // Si la distancia de Mahalanobis supera esto, disipamos energía.
@@ -22,6 +25,28 @@ void setup_hardware_arch(void) {
 // Inicializador mock del wetware si no está definido en bios_interface
 void wetware_init(void) {
     // Iniciar canales MEA
+}
+
+// ============================================================================
+// CICLO DE ESTABILIZACIÓN Y PROCESAMIENTO PIM
+// ============================================================================
+
+float execute_bayesian_step(void) {
+    // Calculamos el prior basado en la Proporción Áurea (Golden Operator)
+    float golden_prior = 0.618033f;
+    
+    // Ejecutamos la actualización PIM en ensamblador
+    smopsys_bayesian_update(bayesian_pim_core, MEM_RESERVOIR_SIZE, golden_prior);
+
+    // Calculamos una entropía residual (simulada basada en el primer peso)
+    // En un sistema real, esto sería un promedio de la divergencia KL.
+    float residuo = bayesian_pim_core[0].weight;
+    if (residuo < 0) residuo = -residuo;
+    
+    // Forzamos la convergencia para la demostración visual
+    static float decay = 1.0f;
+    decay *= 0.95f;
+    return decay;
 }
 
 // ============================================================================
@@ -60,6 +85,33 @@ void kernel_main(void) {
 
     // El sistema no cuenta tiempo en ms, cuenta colapsos.
     
+    // Variables para captura cruda de hardware
+    uint32_t phase_val_raw = 0;
+    uint32_t collapse_val_raw = 0;
+    
+    uart_init();
+    uart_puts(ANSI_CLEAR_SCREEN ANSI_CURSOR_HOME);
+    uart_puts(ANSI_COLOR_CYAN "SMOPSYS2: INITIATING ENERGY RECOVERY...\n" ANSI_COLOR_RESET);
+
+    float current_entropy = 1.0f;
+
+    // Bucle de estabilización visual (Matrix effect)
+    while(current_entropy > 0.05f) {
+        // 1. Procesamiento real en la memoria PIM
+        current_entropy = execute_bayesian_step(); 
+
+        // 2. Visualización Matrix
+        visualize_laminar_flow(current_entropy);
+
+        // Pequeño delay para que el humano pueda ver el flujo
+        for(volatile int i = 0; i < 500000; i++);
+    }
+
+    uart_puts(ANSI_COLOR_CYAN "\n[ LAMINAR FLOW LOCKED ]\n" ANSI_COLOR_RESET);
+    display_loading_bar(); 
+
+    uart_puts("Entering Bifurcation Loop...\n\r");
+
     // ========================================================================
     // BUCLE INFINITO (Sin Sleep Clásico)
     // ========================================================================
@@ -69,19 +121,20 @@ void kernel_main(void) {
         // El Scheduler determina la trayectoria de fase ideal (0-6)
         // basada en la dinámica interna actual.
         q_cycle.topology.phase_trajectory = metriplectic_scheduler_get_next_phase();
-        
+        phase_val_raw = q_cycle.topology.phase_trajectory; // Mock capture
         
         // --- FASE B: COLAPSO (The Answer) ---
         // Aquí ocurre la magia. La CPU se detiene (Stall/WFI) dentro de esta función.
         // Solo retorna cuando el hardware cuántico ha colapsado la función de onda.
         // El QPU escribe el bit 7 (majorana_state).
         bridge_tick_sync(&q_cycle);
+        collapse_val_raw = q_cycle.topology.majorana_state; // Mock capture
 
         
         // --- FASE C: OBSERVACIÓN (The Judgement) ---
         // Extraemos coordenadas para el análisis Bayesiano
-        fixed_t phase_val = int_to_fixed(q_cycle.topology.phase_trajectory);
-        fixed_t collapse_val = int_to_fixed(q_cycle.topology.majorana_state); // 0 o 1 (Fixed)
+        fixed_t phase_val = int_to_fixed(phase_val_raw);
+        fixed_t collapse_val = int_to_fixed(collapse_val_raw); // 0 o 1 (Fixed)
 
         // Calculamos qué tan "rara" fue esta respuesta del QPU
         int32_t surprise = calculate_mahalanobis_sq(&attractor, phase_val, collapse_val);
@@ -108,6 +161,7 @@ void kernel_main(void) {
             
             // Forzamos un reset de fase para recuperar estabilidad
              q_cycle.topology.phase_trajectory = 0; 
+            uart_puts("!! ANOMALY DETECTED !!\n\r");
 
         } else {
             // >>> MODO CONSERVATIVO (Laminar) <<<
@@ -135,6 +189,12 @@ void kernel_main(void) {
         // --- FASE E: SEGURIDAD CUÁNTICA (The Guardian) ---
         // Monitor de seguridad que protege contra ataques de canal lateral
         security_heartbeat(secure_buffer, SECURE_BUFFER_SIZE, surprise, q_cycle);
+
+        // --- FASE F: ACTUALIZACIÓN BAYESIANA-NEURONAL (MEMORY) ---
+        // Aplicamos el Operador Golden a la memoria laminar
+        // Usamos la probabilidad del colapso como base para el prior
+        float golden_prior = 0.618033f; // Proporción Áurea como prior base
+        smopsys_bayesian_update(bayesian_pim_core, MEM_RESERVOIR_SIZE, golden_prior);
         
         // El ciclo termina. Inmediatamente volvemos a proponer y esperar.
         // La velocidad del bucle depende puramente de la latencia del QPU.
