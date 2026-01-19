@@ -40,3 +40,19 @@ void uart_print_hex(uint32_t val) {
         }
     }
 }
+
+int uart_has_data(void) {
+    return (*uart_reg(UART_LSR) & UART_LSR_DR);
+}
+
+char uart_getc(void) {
+    while (!uart_has_data());
+    return *uart_reg(UART_RBR);
+}
+
+char uart_getc_nonblocking(void) {
+    if (uart_has_data()) {
+        return *uart_reg(UART_RBR);
+    }
+    return 0;
+}

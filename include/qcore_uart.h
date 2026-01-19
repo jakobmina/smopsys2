@@ -24,5 +24,8 @@ void uart_init(void);
 void uart_putc(char c);
 void uart_puts(const char* s);
 void uart_print_hex(uint32_t val);
+int  uart_has_data(void);
+char uart_getc(void);
+char uart_getc_nonblocking(void);
 
 #endif // QCORE_UART_H

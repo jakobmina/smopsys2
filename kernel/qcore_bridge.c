@@ -26,27 +26,52 @@ static uint32_t system_phase_zero = 0;
 
 // --- Phase 2: Handshake Protocol ---
 void qport_handshake(void) {
-    // 1. Ping Physical: Verify Signature
-    if (QPORT->MAGIC_SIG != QPORT_MAGIC_SIG) {
-        // HARDWARE NOT DETECTED: Switch to Simulation Mode
-        g_simulation_mode = 1;
-        uart_puts(ANSI_COLOR_YELLOW "\n[ WARNING: QUANTUM HARDWARE NOT DETECTED ]\n" ANSI_COLOR_RESET);
-        uart_puts(ANSI_COLOR_CYAN "[ SWITCHING TO SIMULATION MODE ]\n\n" ANSI_COLOR_RESET);
-        return;
+    uart_puts("--------------------------------------------\n\r");
+    uart_puts("BOOT MENU: SELECT QUANTUM BRIDGE MODE\n\r");
+    uart_puts(" [S] - Simulation Mode (Recommended for QEMU)\n\r");
+    uart_puts(" [H] - Hardware Mode (Quantum Probe)\n\r");
+    uart_puts("--------------------------------------------\n\r");
+    uart_puts("Defaulting to Simulation in 3s...\n\r");
+
+    int countdown = 3000000; // Adjusted for QEMU speed
+    while (countdown > 0) {
+        char c = uart_getc_nonblocking();
+        if (c == 's' || c == 'S' || countdown == 1) {
+            g_simulation_mode = 1;
+            uart_puts("\n[ SYSTEM: SIMULATION MODE ACTIVE ]\n\r");
+            return;
+        }
+        if (c == 'h' || c == 'H') {
+            uart_puts("\n[ PROBING QUANTUM HARDWARE... ]\n\r");
+            if (QPORT->MAGIC_SIG != QPORT_MAGIC_SIG) {
+                g_simulation_mode = 1;
+                uart_puts(ANSI_COLOR_YELLOW "[ WARNING: HARDWARE NOT FOUND - FAILING BACK TO SIM ]\n\r" ANSI_COLOR_RESET);
+                return;
+            }
+            break; // Hardware found
+        }
+        countdown--;
+        if (countdown % 1000000 == 0) uart_putc('.');
     }
 
     // 2. Thermal Purge: Send Calibrate Command
     QPORT->CONTROL_REG = CMD_CALIBRATE;
-
-    // Wait for Temperature OK
-    // Strict Polling: Software hangs if hardware fails (Deadman switch)
+    uart_puts("Locked. Cooling Superconductors...\n\r");
+    
+    int timeout = 10000000;
     while (!(QPORT->STATUS_REG & STATUS_TEMP_OK)) {
         cpu_relax();
+        timeout--;
+        if (timeout == 0) {
+             g_simulation_mode = 1;
+             uart_puts(ANSI_COLOR_RED "\n[ HARDWARE ERROR: THERMAL OVERLOAD ]\n" ANSI_COLOR_RESET);
+             return;
+        }
     }
 
     // 3. Phase Lock
-    // Captura el ciclo base del QPU
     system_phase_zero = QPORT->PHASE_LOCK;
+    uart_puts(ANSI_COLOR_GREEN "[ QUANTUM BRIDGE ONLINE ]\n\r" ANSI_COLOR_RESET);
 }
 
 // --- Phase 3: Execution Synchronization ---

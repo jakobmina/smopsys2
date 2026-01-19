@@ -14,8 +14,11 @@
 To run the Smopsys2 kernel in simulation mode (QEMU):
 
 ```bash
-qemu-system-riscv64 -machine virt -nographic -bios none -kernel smopsys.elf
+qemu-system-riscv64 -machine virt -nographic -serial mon:stdio -bios none -kernel smopsys.elf
 ```
+
+> [!TIP]
+> Si no ves salida después de ejecutar el comando, asegúrate de haber compilado con `make kernel` y de que el archivo `smopsys.elf` esté en el directorio raíz. El flag `-bios none` es crucial para que el kernel se ejecute en Machine Mode sin conflictos.
 
 *To exit QEMU: Press `Ctrl+A` then `X`.*
 
