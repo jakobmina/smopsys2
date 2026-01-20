@@ -77,6 +77,10 @@ To build the Host Test Library (for simulation/testing):
 make test_lib
 ```
 
+## **Detailed Deployment Strategy**
+
+For detailed instructions on deploying to bare-metal RISC-V hardware (HiFive Unleashed, VisionFive 2) and simulation environments, see [DEPLOYMENT.md](DEPLOYMENT.md).
+
 ### Running Tests
 
 The test suite validates the physics logic and mocks the hardware interfaces.

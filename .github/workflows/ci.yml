@@ -1,0 +1,128 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [main, develop]
+    tags: ['v*']
+  pull_request:
+    branches: [main, develop]
+
+env:
+  REGISTRY: ghcr.io
+  IMAGE_NAME: ${{ github.repository }}
+
+jobs:
+  commit-lint:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
+      - name: Install Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+      - name: Install commitlint
+        run: |
+          npm install --save-dev @commitlint/config-conventional @commitlint/cli
+      - name: Lint Commit Messages
+        run: npx commitlint --from ${{ github.event.pull_request.base.sha || 'HEAD~1' }} --to HEAD
+
+  build-and-test:
+    runs-on: ubuntu-22.04
+    strategy:
+      matrix:
+        target: [qemu, hifive, visionfive]
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            gcc-riscv64-unknown-elf \
+            binutils-riscv64-unknown-elf \
+            qemu-system-riscv64 \
+            python3-pytest
+
+      - name: Build Kernel (${{ matrix.target }})
+        run: |
+          make clean
+          CROSS_COMPILE=riscv64-unknown-elf- make kernel
+          cp smopsys.elf smopsys-${{ matrix.target }}.elf
+
+      - name: Run Tests (QEMU target only)
+        if: matrix.target == 'qemu'
+        run: |
+          make test_lib
+          python3 -m pytest tests/ -v
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: kernel-${{ matrix.target }}
+          path: smopsys-${{ matrix.target }}.elf
+          retention-days: 7
+
+  build-docker:
+    needs: build-and-test
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: read
+      packages: write
+    if: github.event_name == 'push'
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: Log in to Container Registry
+        uses: docker/login-action@v2
+        with:
+          registry: ${{ env.REGISTRY }}
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Extract metadata
+        id: meta
+        uses: docker/metadata-action@v4
+        with:
+          images: ${{ env.REGISTRY_IMAGE || env.REGISTRY + '/' + env.IMAGE_NAME }}
+          tags: |
+            type=ref,event=branch
+            type=semver,pattern={{version}}
+            type=sha
+
+      - name: Build & Push Docker Image
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+
+  release:
+    needs: [build-and-test, build-docker]
+    if: startsWith(github.ref, 'refs/tags/v')
+    runs-on: ubuntu-22.04
+    permissions:
+      contents: write
+
+    steps:
+      - name: Download Kernel Artifacts
+        uses: actions/download-artifact@v3
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+             kernel-qemu/smopsys-qemu.elf
+             kernel-hifive/smopsys-hifive.elf
+             kernel-visionfive/smopsys-visionfive.elf
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
