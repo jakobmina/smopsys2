@@ -25,10 +25,13 @@ C_SRCS = kernel/qcore_math.c \
          kernel/qcore_security.c \
          kernel/qcore_lindblad.c \
          kernel/qcore_uart.c \
+         kernel/qcore_viz.c \
+         kernel/qcore_pim.c \
          kernel/main.c
 
 # Kernel Entry (Assembly)
-ASM_SRCS = kernel/entry.S
+ASM_SRCS = kernel/entry.S \
+           kernel/qcore_pim_asm.S
 
 # Shared Sources for Test Lib (Exclude main.c to avoid conflict/entry point issues in lib)
 TEST_SRCS = kernel/qcore_math.c \
@@ -39,7 +42,9 @@ TEST_SRCS = kernel/qcore_math.c \
             kernel/qcore_bayes.c \
             kernel/qcore_bridge.c \
             kernel/qcore_security.c \
-            kernel/qcore_lindblad.c
+            kernel/qcore_lindblad.c \
+            kernel/qcore_uart_test.c \
+            kernel/qcore_viz.c
 
 # --- Flags ---
 # RISC-V Bare Metal Flags

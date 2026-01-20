@@ -1,5 +1,5 @@
 # Smopsys2 Dockerfile - Complete Build Environment
-# 
+#
 # This Dockerfile creates a complete build environment for the Smopsys2 kernel
 # including both the host test library and (optionally) the RISC-V kernel image.
 
@@ -41,29 +41,11 @@ WORKDIR /smopsys2
 # Copiar archivos del proyecto
 COPY . /smopsys2/
 
-# Compilar la biblioteca de tests
-RUN make clean && make test_lib
-
-# Update the build command
-RUN riscv64-unknown-elf-gcc -T kernel.ld -o smopsys.elf \
-    kernel/entry.S \
-    kernel/main.c \
-    kernel/qcore_uart.c \
-    kernel/qcore_lindblad.c \
-    kernel/qcore_bayes.c \
-    kernel/qcore_math.c \
-    kernel/qcore_bridge.c \
-    kernel/qcore_scheduler.c \
-    kernel/qcore_security.c \
-    kernel/qcore_wetware.c \
-    kernel/qcore_asm.c \
-    kernel/qcore_pim.c \
-    kernel/qcore_pim_asm.S \
-    kernel/qcore_viz.c \
-    -ffreestanding -nostdlib -Iinclude -mcmodel=medany
+# Compilar la biblioteca de tests y el kernel
+RUN make clean && make test_lib && make kernel
 
 # Ejecutar tests automáticamente al construir
-RUN python3 -m pytest tests/ -v || true
+RUN python3 -m pytest tests/ -v
 
 # Comando por defecto: Mostrar estado del sistema
 CMD ["sh", "-c", "echo '=== SMOPSYS2 BUILD STATUS ===' && \

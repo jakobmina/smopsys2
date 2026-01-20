@@ -33,7 +33,11 @@ void qport_handshake(void) {
     uart_puts("--------------------------------------------\n\r");
     uart_puts("Defaulting to Simulation in 3s...\n\r");
 
+#ifdef QCORE_TEST_ENV
+    int countdown = 1000;
+#else
     int countdown = 3000000; // Adjusted for QEMU speed
+#endif
     while (countdown > 0) {
         char c = uart_getc_nonblocking();
         if (c == 's' || c == 'S' || countdown == 1) {

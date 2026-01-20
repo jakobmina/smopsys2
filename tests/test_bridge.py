@@ -44,6 +44,11 @@ def test_bridge_handshake(qcore_lib):
             mmio.PHASE_LOCK = 123456
     
     def run_handshake():
+        # Set mock UART input to 'H' for Hardware mode
+        try:
+            qcore_lib.set_mock_uart_input(ord('H'))
+        except AttributeError:
+            pass # Function might not be exported or named differently
         qcore_lib.qport_handshake()  # Fixed function name
         handshake_complete.set()
     
