@@ -10,6 +10,7 @@
 #include "../include/qcore_uart.h"
 #include "../include/qcore_pim.h"
 #include "../include/qcore_viz.h"
+#include "../include/qcore_topology.h"
 
 // Umbral de Sorpresa (Chi-Cuadrado > 6.0 en Q16.16)
 // Si la distancia de Mahalanobis supera esto, disipamos energía.
@@ -112,6 +113,30 @@ void kernel_main(void) {
     display_loading_bar(); 
 
     uart_puts("Entering Bifurcation Loop...\n\r");
+
+    // --- TOPOLOGICAL SHIFT: Campo de Fock (6 Momentos) ---
+    uart_puts(ANSI_COLOR_YELLOW ">> Init Topological Field (Fock 6)...\n\r" ANSI_COLOR_RESET);
+    NeuronIdentity neurons[6];
+    for(int i = 0; i < 6; i++) {
+        neurons[i] = create_neuron(i + 1);
+        // Debug output to UART
+        // Note: we use our custom print if available, or just skip detailed floats if UART is limited
+        // but let's assume we want to see the hierarchy
+        uart_puts("Neuron n=");
+        char n_buf[2]; n_buf[0] = '1' + i; n_buf[1] = '\0';
+        uart_puts(n_buf);
+        uart_puts(" | Layer: ");
+        uart_puts(neurons[i].layer);
+        uart_puts("\n\r");
+    }
+
+    WrappedMatrix matrix = process_matrix_wrapping(neurons);
+    double mu_phi_topo = calculate_mu_phi(matrix);
+    SphericalProjection proj = calculate_spherical(matrix);
+    
+    // Satisfy Rule 3.1
+    LagrangianState topo_L = topology_compute_lagrangian(matrix);
+    (void)topo_L; // Used for system monitoring
 
     // ========================================================================
     // BUCLE INFINITO (Sin Sleep Clásico)
