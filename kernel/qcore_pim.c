@@ -1,5 +1,11 @@
 #include "../include/qcore_pim.h"
 
-// Ubicamos la matriz exactamente en la sección protegida
+// Ubicamos los vectores exactamente en la sección protegida
 __attribute__((section(".smop_laminar_mem"), aligned(4096)))
-LaminarCell bayesian_pim_core[MEM_RESERVOIR_SIZE];
+LaminarCell pim_tensor_x[TENSOR_BASE_N];
+
+__attribute__((section(".smop_laminar_mem"), aligned(4096)))
+LaminarCell pim_tensor_y[TENSOR_BASE_N];
+
+__attribute__((section(".smop_laminar_mem"), aligned(4096)))
+LaminarCell pim_tensor_z[TENSOR_BASE_N];

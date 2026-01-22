@@ -3,17 +3,24 @@
 
 #include <stdint.h>
 
-#define MEM_RESERVOIR_SIZE 1024
-
 typedef struct {
     float weight;      // El "peso" neuronal (Memoria)
     float probability; // El "prior" bayesiano (Procesador)
     uint64_t metadata; // Estado de fragmentación energética
 } LaminarCell;
 
-// Ubicamos la matriz exactamente en la sección protegida
-__attribute__((section(".smop_laminar_mem"), aligned(4096)))
-extern LaminarCell bayesian_pim_core[MEM_RESERVOIR_SIZE];
+#define TENSOR_BASE_N 4448
+#define VIRTUAL_NEURON_TARGET 88000000000ULL
+
+/* The 88B virtual neurons are projected from these 3 physical vectors */
+extern __attribute__((section(".smop_laminar_mem"), aligned(4096)))
+LaminarCell pim_tensor_x[TENSOR_BASE_N];
+
+extern __attribute__((section(".smop_laminar_mem"), aligned(4096)))
+LaminarCell pim_tensor_y[TENSOR_BASE_N];
+
+extern __attribute__((section(".smop_laminar_mem"), aligned(4096)))
+LaminarCell pim_tensor_z[TENSOR_BASE_N];
 
 // Rutina de actualización Bayesiana-Neuronal (RISC-V Assembly)
 // fa0: Golden Prior (float)

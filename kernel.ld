@@ -42,7 +42,7 @@ SECTIONS
     {
         _laminar_mem_start = .;
         *(.smop_laminar_mem)
-        . = . + 0x100000; /* Reservamos 1MB para la matriz de pesos */
+        . = . + 0x1000000; /* Reservamos 16MB para la matriz de pesos */
         _laminar_mem_end = .;
     } > RAM
 

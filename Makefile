@@ -27,7 +27,9 @@ C_SRCS = kernel/qcore_math.c \
          kernel/qcore_uart.c \
          kernel/qcore_viz.c \
          kernel/qcore_pim.c \
+         kernel/qcore_hierarchy.c \
          kernel/qcore_topology.c \
+         kernel/qcore_phase.c \
          kernel/main.c
 
 # Kernel Entry (Assembly)
@@ -46,7 +48,10 @@ TEST_SRCS = kernel/qcore_math.c \
             kernel/qcore_lindblad.c \
             kernel/qcore_uart_test.c \
             kernel/qcore_viz.c \
-            kernel/qcore_topology.c
+            kernel/qcore_pim.c \
+            kernel/qcore_topology.c \
+            kernel/qcore_hierarchy.c \
+            kernel/qcore_phase.c
 
 # --- Flags ---
 # RISC-V Bare Metal Flags

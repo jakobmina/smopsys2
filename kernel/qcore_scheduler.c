@@ -39,11 +39,13 @@ uint8_t metriplectic_scheduler_get_next_phase(void) {
     internal_tick++;
     
     // Mapeamos el tick a 7 bits (0-127)
-    // El operador O_n modula esto
-    fixed_t o_n = calculate_golden_operator(internal_tick);
-    
     // Si O_n es positivo, tendemos a fases pares (estables)
     // Si O_n es negativo, tendemos a fases impares (disipativas)
-    // Por ahora, lógica simple de mapeo directo
-    return (uint8_t)(internal_tick % 128);
+    uint8_t base_phase = (uint8_t)(internal_tick % 128);
+    
+    if (o_n >= 0) {
+        return base_phase & 0xFE; // Forzar par (Clear bit 0)
+    } else {
+        return base_phase | 0x01; // Forzar impar (Set bit 0)
+    }
 }

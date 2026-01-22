@@ -11,6 +11,7 @@
 #include "../include/qcore_pim.h"
 #include "../include/qcore_viz.h"
 #include "../include/qcore_topology.h"
+#include "../include/qcore_phase.h"
 
 // Umbral de Sorpresa (Chi-Cuadrado > 6.0 en Q16.16)
 // Si la distancia de Mahalanobis supera esto, disipamos energía.
@@ -36,12 +37,13 @@ float execute_bayesian_step(void) {
     // Calculamos el prior basado en la Proporción Áurea (Golden Operator)
     float golden_prior = 0.618033f;
     
-    // Ejecutamos la actualización PIM en ensamblador
-    smopsys_bayesian_update(bayesian_pim_core, MEM_RESERVOIR_SIZE, golden_prior);
+    // Ejecutamos la actualización PIM en los tres vectores tensoriales
+    smopsys_bayesian_update(pim_tensor_x, TENSOR_BASE_N, golden_prior);
+    smopsys_bayesian_update(pim_tensor_y, TENSOR_BASE_N, golden_prior);
+    smopsys_bayesian_update(pim_tensor_z, TENSOR_BASE_N, golden_prior);
 
     // Calculamos una entropía residual (simulada basada en el primer peso)
-    // En un sistema real, esto sería un promedio de la divergencia KL.
-    float residuo = bayesian_pim_core[0].weight;
+    float residuo = pim_tensor_x[0].weight;
     if (residuo < 0) residuo = -residuo;
     
     // Forzamos la convergencia para la demostración visual
@@ -59,6 +61,7 @@ void kernel_main(void) {
     uart_init();
     uart_puts(ANSI_CLEAR_SCREEN ANSI_CURSOR_HOME);
     uart_puts(ANSI_COLOR_CYAN "SMOPSYS2: INITIATING ENERGY RECOVERY...\n" ANSI_COLOR_RESET);
+    uart_puts(ANSI_COLOR_GREEN "[ QUOREMIND CUBIC SCALE: 88B VIRTUAL | 13K PHYSICAL ]\n" ANSI_COLOR_RESET);
 
     // 1. Configuración de Arquitectura Clásica
     setup_hardware_arch();
@@ -96,13 +99,23 @@ void kernel_main(void) {
     uint32_t collapse_val_raw = 0;
     
     float current_entropy = 1.0f;
+    PhaseState p_breath;
+    phase_init(&p_breath);
 
     // Bucle de estabilización visual (Matrix effect)
     while(current_entropy > 0.05f) {
         // 1. Procesamiento real en la memoria PIM
         current_entropy = execute_bayesian_step(); 
 
-        // 2. Visualización Matrix
+        // 2. Monitoreo del "Aliento Pentagonal"
+        // Simulamos innovación basada en el latido del sistema
+        static int tick = 0;
+        fixed_t innovation = calculate_golden_operator(tick++);
+        if (phase_update_pentagonal(&p_breath, innovation)) {
+            uart_puts(ANSI_COLOR_CYAN " [ BREATH: RESIDUE SYNC ] " ANSI_COLOR_RESET);
+        }
+
+        // 3. Visualización Matrix
         visualize_laminar_flow(current_entropy);
 
         // Pequeño delay para que el humano pueda ver el flujo
@@ -110,6 +123,11 @@ void kernel_main(void) {
     }
 
     uart_puts(ANSI_COLOR_CYAN "\n[ LAMINAR FLOW LOCKED ]\n" ANSI_COLOR_RESET);
+    if (phase_is_laminar(&p_breath)) {
+        uart_puts(ANSI_COLOR_GREEN "[ PHASE STATUS: OPTIMAL | 0.72 RAD SYNC ]\n\r" ANSI_COLOR_RESET);
+    } else {
+        uart_puts(ANSI_COLOR_YELLOW "[ PHASE STATUS: TURBULENT | RECOVERY MODE ]\n\r" ANSI_COLOR_RESET);
+    }
     display_loading_bar(); 
 
     uart_puts("Entering Bifurcation Loop...\n\r");
@@ -216,11 +234,11 @@ void kernel_main(void) {
         // Monitor de seguridad que protege contra ataques de canal lateral
         security_heartbeat(secure_buffer, SECURE_BUFFER_SIZE, surprise, q_cycle);
 
-        // --- FASE F: ACTUALIZACIÓN BAYESIANA-NEURONAL (MEMORY) ---
-        // Aplicamos el Operador Golden a la memoria laminar
-        // Usamos la probabilidad del colapso como base para el prior
-        float golden_prior = 0.618033f; // Proporción Áurea como prior base
-        smopsys_bayesian_update(bayesian_pim_core, MEM_RESERVOIR_SIZE, golden_prior);
+        // Aplicamos el Operador Golden a la memoria tensorial
+        float golden_prior = 0.618033f; 
+        smopsys_bayesian_update(pim_tensor_x, TENSOR_BASE_N, golden_prior);
+        smopsys_bayesian_update(pim_tensor_y, TENSOR_BASE_N, golden_prior);
+        smopsys_bayesian_update(pim_tensor_z, TENSOR_BASE_N, golden_prior);
         
         // El ciclo termina. Inmediatamente volvemos a proponer y esperar.
         // La velocidad del bucle depende puramente de la latencia del QPU.

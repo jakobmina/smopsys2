@@ -5,8 +5,8 @@
 .global smopsys_bayesian_update
 
 smopsys_bayesian_update:
-    # a0: Dirección base de la matriz de pesos (.smop_laminar_mem)
-    # a1: Número de fragmentos a procesar
+    # a0: Dirección base de los vectores tensoriales
+    # a1: Número de celdas a procesar (TENSOR_BASE_N)
     # fa0: Prior del Operador Golden (pre-cargado)
 
 loop:
