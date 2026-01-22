@@ -42,6 +42,7 @@ uint8_t metriplectic_scheduler_get_next_phase(void) {
     // Si O_n es positivo, tendemos a fases pares (estables)
     // Si O_n es negativo, tendemos a fases impares (disipativas)
     uint8_t base_phase = (uint8_t)(internal_tick % 128);
+    fixed_t o_n = calculate_golden_operator(internal_tick);
     
     if (o_n >= 0) {
         return base_phase & 0xFE; // Forzar par (Clear bit 0)
